@@ -5,7 +5,9 @@
  *      Author: HOME
  */
 
-
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
 #include "testfunctions.h"
 
 
@@ -26,6 +28,18 @@ double myvalue
     	f += x[i] * x[i] * x[i] * x[i];
     }
     return (f) ;
+}
+
+void myvaluegrad(
+		double *x,
+		int n,
+		double *jac
+)
+{
+	int i;
+	for(i = 0; i < n; ++i) {
+		jac[i] = 4 * x[i] * x[i] * x[i];
+	}
 }
 
 double func4(double *x,int N) {

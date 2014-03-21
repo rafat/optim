@@ -140,7 +140,7 @@ static void inithess_naive(double *H,int N,double fi,double fsval,double *dx) {
 	
 }
 
-int bfgs_min_naive(double (*funcpt)(double *,int),double *xi,int N,double *dx,double fsval,int MAXITER,
+int bfgs_min_naive(double (*funcpt)(double *,int),void(*funcgrad)(double *, int,double *),double *xi,int N,double *dx,double fsval,int MAXITER,
 		double eps,double *xf)  {
 	int rcode,iter;
 	int i,siter,retval;
@@ -187,7 +187,7 @@ int bfgs_min_naive(double (*funcpt)(double *,int),double *xi,int N,double *dx,do
 		exit(1);
 	}
 	
-	grad_fd(funcpt,xi,N,dx,eps2,jac);
+	grad_fd(funcpt,funcgrad,xi,N,dx,eps2,jac);
 	
 	
 	maxstep = 1000.0; // Needs to be set at a much higher value proportional to l2 norm of dx
@@ -260,7 +260,7 @@ int bfgs_min_naive(double (*funcpt)(double *,int),double *xi,int N,double *dx,do
 			exit(1);
 		}
 		//printf("%d %g \n",iter,fxf);
-		grad_fd(funcpt,xf,N,dx,eps2,jacf);
+		grad_fd(funcpt,funcgrad,xf,N,dx,eps2,jacf);
 		rcode = stopcheck(fxf,N,xc,xf,jacf,dx,fsval,gtol,stol,retval);
 		//hessian_fd(funcpt,xf,N,dx,hess);
 		bfgs_naive(hess,N,eps,xc,xf,jac,jacf);
@@ -389,7 +389,7 @@ void bfgs_factored(double *H,int N,double eps,double *xi,double *xf,double *jac,
 	free(u);
 }
 
-int bfgs_min(double (*funcpt)(double *,int),double *xi,int N,double *dx,double fsval,int MAXITER,int *niter,
+int bfgs_min(double (*funcpt)(double *,int),void(*funcgrad)(double *, int,double *),double *xi,int N,double *dx,double fsval,int MAXITER,int *niter,
 		double eps,double gtol,double stol,double *xf)  {
 	int rcode;
 	int i,siter,retval;
@@ -434,7 +434,7 @@ int bfgs_min(double (*funcpt)(double *,int),double *xi,int N,double *dx,double f
 		exit(1);
 	}
 	
-	grad_fd(funcpt,xi,N,dx,eps2,jac);
+	grad_fd(funcpt,funcgrad,xi,N,dx,eps2,jac);
 	
 	
 	maxstep = 1000.0; // Needs to be set at a much higher value proportional to l2 norm of dx
@@ -501,7 +501,7 @@ int bfgs_min(double (*funcpt)(double *,int),double *xi,int N,double *dx,double f
 			exit(1);
 		}
 
-		grad_fd(funcpt,xf,N,dx,eps2,jacf);
+		grad_fd(funcpt,funcgrad,xf,N,dx,eps2,jacf);
 		rcode = stopcheck(fxf,N,xc,xf,jacf,dx,fsval,gtol,stol,retval);
 		//hessian_fd(funcpt,xf,N,dx,hess);
 		//bfgs_naive(hess,N,xc,xf,jac,jacf);
@@ -645,7 +645,7 @@ void inithess_l(double *H, int N, int k, double *tsk,double *tyk, double *dx) {
 
 }
 
-int bfgs_l_min(double (*funcpt)(double *,int),double *xi,int N,int m,double *dx,double fsval,int MAXITER,int *niter,
+int bfgs_l_min(double (*funcpt)(double *,int),void(*funcgrad)(double *, int,double *),double *xi,int N,int m,double *dx,double fsval,int MAXITER,int *niter,
 		double eps,double gtol,double ftol,double xtol,double *xf)  {
 	int rcode;
 	int i,j,siter,retval;
@@ -697,7 +697,7 @@ int bfgs_l_min(double (*funcpt)(double *,int),double *xi,int N,int m,double *dx,
 		exit(1);
 	}
 
-	grad_fd(funcpt,xi,N,dx,eps2,jac);
+	grad_fd(funcpt,funcgrad,xi,N,dx,eps2,jac);
 
 	maxstep = 1000.0; // Needs to be set at a much higher value proportional to l2 norm of dx
 	dt1 = dt2 = 0.0;
@@ -772,7 +772,7 @@ int bfgs_l_min(double (*funcpt)(double *,int),double *xi,int N,int m,double *dx,
 
 		//scale(jac,1,N,-1.0);
 		//retval = lnsrchmod(funcpt,xc,jac,step,N,dx,maxstep,stol,xf,jacf);
-		retval = lnsrchmt(funcpt, xc, &fxf, jac, &alpha, step, N, dx, maxstep,MAXITER,eps2,ftol, gtol, xtol, xf);
+		retval = lnsrchmt(funcpt,funcgrad, xc, &fxf, jac, &alpha, step, N, dx, maxstep,MAXITER,eps2,ftol, gtol, xtol, xf);
 		//retval = lnsrch(funcpt,xc,jac,step,N,dx,maxstep,stol,xf);
 
 		//retval = swolfe(funcpt,xc,jac,step,N,dx,maxstep,stol,xf);

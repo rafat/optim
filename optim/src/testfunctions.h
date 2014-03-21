@@ -19,6 +19,12 @@ double myvalue
     int       n
 );
 
+void myvaluegrad(
+		double *x,
+		int n,
+		double *jac
+);
+
 double func4(double *x,int N);
 
 double func1(double *x,int N);

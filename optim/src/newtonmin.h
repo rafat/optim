@@ -22,15 +22,15 @@ void hessian_fd2(double (*funcpt)(double *,int),double *x,int N,double *dx,doubl
 
 int lnsrch(double (*funcpt)(double *,int),double *xi,double *jac,double *p,int N,double * dx,double maxstep,double stol,double *x);
 
-int lnsrchmod(double (*funcpt)(double *,int),double *xi,double *jac,double *p,int N,double * dx,double maxstep,
+int lnsrchmod(double (*funcpt)(double *,int),void(*funcgrad)(double *, int,double *),double *xi,double *jac,double *p,int N,double * dx,double maxstep,
 	double eps2,double stol,double *x,double *jacf);
 	
-int lnsrchcg(double (*funcpt)(double *,int),double *xi,double *jac,double *p,int N,double * dx,double maxstep,
+int lnsrchcg(double (*funcpt)(double *,int),void(*funcgrad)(double *, int,double *),double *xi,double *jac,double *p,int N,double * dx,double maxstep,
 	double eps2,double stol,double *x,double *jacf);
 	
 int stopcheck(double fx,int N,double *xc,double *xf,double *jac,double *dx,double fsval,double gtol,double stol,int retval);
 
-int newton_min_func(double (*funcpt)(double *,int),double *xi,int N,double *dx,double fsval,int MAXITER,
+int newton_min_func(double (*funcpt)(double *,int),void(*funcgrad)(double *, int,double *),double *xi,int N,double *dx,double fsval,int MAXITER,
 		int *niter,double eps,double gtol,double stol,double *xf);
 
 int trsrch(double (*funcpt)(double *,int),double *xi,double *jac,double *sN,int N,double * dx,double maxstep,
@@ -48,7 +48,7 @@ void trstep_ddl(double *jac,double *sN,int N,double * dx,double maxstep,double *
 int trsrch_ddl(double (*funcpt)(double *,int),double *xi,double *jac,double *sN,int N,double * dx,double maxstep,
 		int iter,double *L,double *hess,double stol,double *ioval,double *x);		
 
-int newton_min_trust(double (*funcpt)(double *,int),double *xi,int N,double *dx,double fsval,double delta,
+int newton_min_trust(double (*funcpt)(double *,int),void(*funcgrad)(double *, int,double *),double *xi,int N,double *dx,double fsval,double delta,
 		int method,int MAXITER,int *niter,double eps,double gtol,double stol,double *xf);
 
 #ifdef __cplusplus

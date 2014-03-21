@@ -5,8 +5,8 @@
  *      Author: HOME
  */
 
-#ifndef NELDORMEAD_H_
-#define NELDORMEAD_H_
+#ifndef NELDERMEAD_H_
+#define NELDERMEAD_H_
 
 #include "brent.h"
 

@@ -791,7 +791,7 @@ void minverse(double *A,int N,double *ipiv,double *inv) {
 	
 	for (i = 0; i < N; ++i) {
 		col[i] = 1.;
-		linsolve(A,N,col,x,ipiv);
+		linsolve(A,N,col,ipiv,x);
 		stride = i;
 		for(j = 0; j < N;++j) {
 			inv[stride] = x[j];

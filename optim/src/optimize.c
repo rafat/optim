@@ -47,7 +47,7 @@ static int mvalue(int N) {
 	return mval;
 }
 
-int fminunc(double (*funcpt)(double *,int),int N,double *xi,int method,double *xf) {
+int fminunc(double (*funcpt)(double *,int),void(*funcgrad)(double *, int,double *),int N,double *xi,int method,double *xf) {
 	int i,retval,MAXITER,niter,m;
 	double fsval,eps,gtol,stol,ftol,xtol,delta;
 	double *dx;
@@ -80,21 +80,21 @@ int fminunc(double (*funcpt)(double *,int),int N,double *xi,int method,double *x
 		if (MAXITER < 1000) {
 			MAXITER = 1000;
 		}
-		retval = newton_min_func(funcpt,xi,N,dx,fsval,MAXITER,&niter,eps,gtol,stol,xf);
+		retval = newton_min_func(funcpt,funcgrad,xi,N,dx,fsval,MAXITER,&niter,eps,gtol,stol,xf);
 	} else if (method == 2) {
 		gtol = pow(eps,1.0/3.0);
 		stol = gtol * gtol;
 		if (MAXITER < 1000) {
 			MAXITER = 1000;
 		}
-		retval = newton_min_trust(funcpt,xi,N,dx,fsval,delta,0,MAXITER,&niter,eps,gtol,stol,xf);
+		retval = newton_min_trust(funcpt,funcgrad,xi,N,dx,fsval,delta,0,MAXITER,&niter,eps,gtol,stol,xf);
 	} else if (method == 3) {
 		gtol = pow(eps,1.0/3.0);
 		stol = gtol * gtol;
 		if (MAXITER < 1000) {
 			MAXITER = 1000;
 		}
-		retval = newton_min_trust(funcpt,xi,N,dx,fsval,delta,1,MAXITER,&niter,eps,gtol,stol,xf);
+		retval = newton_min_trust(funcpt,funcgrad,xi,N,dx,fsval,delta,1,MAXITER,&niter,eps,gtol,stol,xf);
 	} else if (method == 4) {
 		gtol = pow(eps,1.0/3.0);
 		ftol = gtol * gtol;
@@ -102,14 +102,14 @@ int fminunc(double (*funcpt)(double *,int),int N,double *xi,int method,double *x
 		if (MAXITER < 1000) {
 			MAXITER = 1000;
 		}
-		retval = conjgrad_min_lin(funcpt,xi,N,dx,MAXITER,&niter,eps,gtol,ftol,xtol,xf);
+		retval = conjgrad_min_lin(funcpt,funcgrad,xi,N,dx,MAXITER,&niter,eps,gtol,ftol,xtol,xf);
 	} else if (method == 5) {
 		gtol = pow(eps,1.0/3.0);
 		stol = gtol * gtol;
 		if (MAXITER < 1000) {
 			MAXITER = 1000;
 		}
-		retval = bfgs_min(funcpt,xi,N,dx,fsval,MAXITER,&niter,eps,gtol,stol,xf);
+		retval = bfgs_min(funcpt,funcgrad,xi,N,dx,fsval,MAXITER,&niter,eps,gtol,stol,xf);
 	} else if (method == 6) {
 		gtol = pow(eps,1.0/3.0);
 		ftol = gtol * gtol;
@@ -118,7 +118,7 @@ int fminunc(double (*funcpt)(double *,int),int N,double *xi,int method,double *x
 			MAXITER = 1000;
 		}
 		m = mvalue(N);
-		retval = bfgs_l_min(funcpt,xi,N,m,dx,fsval,MAXITER,&niter,eps,gtol,ftol,xtol,xf);
+		retval = bfgs_l_min(funcpt,funcgrad,xi,N,m,dx,fsval,MAXITER,&niter,eps,gtol,ftol,xtol,xf);
 	}
 
 

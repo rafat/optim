@@ -6,7 +6,7 @@
  */
 
 
-#include "neldormead.h"
+#include "neldermead.h"
 
 /*
  * C Routine nel_min is based on O'Neill's FORTRAN implementation of Nelder-Mead algorithm

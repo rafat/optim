@@ -121,7 +121,7 @@ int stopcheck2(double fx,int N,double *xc,double *xf,double *jac,double *dx,doub
 }
 
 
-int cgpr_mt(double(*funcpt)(double *, int), double *xi, int N, double *dx, int MAXITER,int *niter,
+int cgpr_mt(double(*funcpt)(double *, int),void(*funcgrad)(double *, int,double *), double *xi, int N, double *dx, int MAXITER,int *niter,
 		double eps,double gtol,double ftol,double xtol,double *xf) {
 	int i, rcode, retval, k, restart;
 	int siter;
@@ -170,7 +170,7 @@ int cgpr_mt(double(*funcpt)(double *, int), double *xi, int N, double *dx, int M
 	}
 
 
-	grad_fd(funcpt, xi, N, dx,eps2, jac);
+	grad_fd(funcpt,funcgrad, xi, N, dx,eps2, jac);
 	for (i = 0; i < N; ++i) {
 		pk[i] = -jac[i];
 		xf[i] = xi[i];
@@ -198,7 +198,7 @@ int cgpr_mt(double(*funcpt)(double *, int), double *xi, int N, double *dx, int M
 			jacf[i] = jac[i];
 		}
 
-		retval = lnsrchmt(funcpt, xi,&fxf,jac,&alpha, pk, N, dx, maxstep,MAXITER,eps2, ftol, gtol, xtol, xf);
+		retval = lnsrchmt(funcpt,funcgrad, xi,&fxf,jac,&alpha, pk, N, dx, maxstep,MAXITER,eps2, ftol, gtol, xtol, xf);
 		if (retval == 100) {
 			printf("The Linesearch Algorithm didn't converge");
 			break;
@@ -247,7 +247,7 @@ int cgpr_mt(double(*funcpt)(double *, int), double *xi, int N, double *dx, int M
 	return rcode;
 }
 
-int conjgrad_min_lin(double (*funcpt)(double *,int),double *xi,int N,double *dx,int MAXITER,int *niter,
+int conjgrad_min_lin(double (*funcpt)(double *,int),void(*funcgrad)(double *, int,double *),double *xi,int N,double *dx,int MAXITER,int *niter,
 		double eps,double gtol,double ftol,double xtol,double *xf) {
 	int rcode,i;
 	
@@ -273,7 +273,7 @@ int conjgrad_min_lin(double (*funcpt)(double *,int),double *xi,int N,double *dx,
 	
 	//rcode = cgpc(xi,N,A,b,xf);
 	//rcode = cgpr(funcpt,xi,N,dx,xf);// FR
-	rcode = cgpr_mt(funcpt,xi,N,dx,MAXITER,niter,eps,gtol,ftol,xtol,xf);//PR+
+	rcode = cgpr_mt(funcpt,funcgrad,xi,N,dx,MAXITER,niter,eps,gtol,ftol,xtol,xf);//PR+
 
 	
 	return rcode;

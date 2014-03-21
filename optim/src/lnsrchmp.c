@@ -62,7 +62,23 @@ double l2norm(double *vec, int N) {
 	return l2;
 }
 
-void grad_fd(double(*funcpt)(double *, int), double *x, int N, double *dx, double eps2, double *f) {
+void grad_fd(double(*funcpt)(double *, int),void(*funcgrad)(double *, int,double *), double *x, int N, double *dx,
+		double eps2, double *f) {
+	if (funcgrad == NULL) {
+		//printf("FD Gradient \n");
+		grad_calc(funcpt,x,N,dx,eps2,f);
+	} else {
+		//printf("Analytic gradient \n");
+		funcgrad(x,N,f);
+	}
+
+}
+
+void grad_cd(double(*funcpt)(double *, int), double *x, int N, double *dx, double eps, double *f) {
+
+}
+
+void grad_calc(double(*funcpt)(double *, int), double *x, int N, double *dx, double eps2, double *f) {
 	int i, j;
 	double step, fd, stepmax;
 	double *xi;
@@ -92,10 +108,6 @@ void grad_fd(double(*funcpt)(double *, int), double *x, int N, double *dx, doubl
 	}
 
 	free(xi);
-
-}
-
-void grad_cd(double(*funcpt)(double *, int), double *x, int N, double *dx, double eps, double *f) {
 
 }
 
@@ -381,7 +393,7 @@ int cstep(double *stx,double *fx,double *dx,double *sty,double *fy,double *dy,do
 	return info;
 }
 
-int cvsrch(double(*funcpt)(double *, int), double *x, double *f, double *g, double *stp, double *s, int N, double *dx, double maxstep,
+int cvsrch(double(*funcpt)(double *, int),void(*funcgrad)(double *, int,double *), double *x, double *f, double *g, double *stp, double *s, int N, double *dx, double maxstep,
 	int MAXITER,double eps2,double ftol, double gtol, double xtol) {
 	int info,i,siter,nfev;
 	int infoc, j, brackt, stage1;
@@ -492,7 +504,7 @@ int cvsrch(double(*funcpt)(double *, int), double *x, double *f, double *g, doub
 			printf("Program Exiting as the function value exceeds the maximum double value");
 			exit(1);
 		}
-		grad_fd(funcpt, x, N, dx, eps2,g);
+		grad_fd(funcpt,funcgrad, x, N, dx, eps2,g);
 		nfev++;
 
 		//printf("ITER %d stp %g \n", nfev,stp);
@@ -576,7 +588,7 @@ int cvsrch(double(*funcpt)(double *, int), double *x, double *f, double *g, doub
 	return info;
 }
 
-int lnsrchmt(double(*funcpt)(double *, int), double *xi,double *f, double *jac,double *alpha, double *p, int N, double *dx, double maxstep, int MAXITER,
+int lnsrchmt(double(*funcpt)(double *, int),void(*funcgrad)(double *, int,double *), double *xi,double *f, double *jac,double *alpha, double *p, int N, double *dx, double maxstep, int MAXITER,
 		double eps2,double ftol, double gtol, double xtol, double *x) {
 	int i,retval,info;
 
@@ -601,7 +613,7 @@ int lnsrchmt(double(*funcpt)(double *, int), double *xi,double *f, double *jac,d
 		x[i] = xi[i];
 	}
 
-	info = cvsrch(funcpt, x,f, jac, alpha, p, N, dx, maxstep,MAXITER,eps2,
+	info = cvsrch(funcpt,funcgrad, x,f, jac, alpha, p, N, dx, maxstep,MAXITER,eps2,
 		ftol, gtol, xtol);
 	
 	retval = info;

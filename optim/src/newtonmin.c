@@ -511,7 +511,7 @@ int lnsrch(double (*funcpt)(double *,int),double *xi,double *jac,double *p,int N
 	return retval;
 }
 
-int lnsrchmod(double (*funcpt)(double *,int),double *xi,double *jac,double *p,int N,double * dx,double maxstep,
+int lnsrchmod(double (*funcpt)(double *,int),void(*funcgrad)(double *, int,double *),double *xi,double *jac,double *p,int N,double * dx,double maxstep,
 		double eps2,double stol,double *x,double *jacf) {
 	int retval,i;
 	double alpha,lambda,lambdamin,funcf,funci,lambdaprev,lambdatemp,funcprev;
@@ -575,7 +575,7 @@ int lnsrchmod(double (*funcpt)(double *,int),double *xi,double *jac,double *p,in
 			exit(1);
 		}
 		if (funcf <= funci + alpha *lambda *slopei[0]) {
-			grad_fd(funcpt,x,N,dx,eps2,jacf);
+			grad_fd(funcpt,funcgrad,x,N,dx,eps2,jacf);
 			mmult(jacf,p,slopen,1,N,1);
 			
 			if(slopen[0] < beta * slopei[0]) {
@@ -601,7 +601,7 @@ int lnsrchmod(double (*funcpt)(double *,int),double *xi,double *jac,double *p,in
 								exit(1);
 							}
 							if (funcf <= funci + alpha *lambda *slopei[0]) {
-								grad_fd(funcpt,x,N,dx,eps2,jacf);
+								grad_fd(funcpt,funcgrad,x,N,dx,eps2,jacf);
 								mmult(jacf,p,slopen,1,N,1);
 							}
 						}
@@ -644,7 +644,7 @@ int lnsrchmod(double (*funcpt)(double *,int),double *xi,double *jac,double *p,in
 								lambdadiff = lambdainc;
 								funchi = funcf;
 							} else {
-								grad_fd(funcpt,x,N,dx,eps2,jacf);
+								grad_fd(funcpt,funcgrad,x,N,dx,eps2,jacf);
 								mmult(jacf,p,slopen,1,N,1);
 								if (slopen[0] < beta * slopei[0]) {
 									lambdalo = lambda;
@@ -721,7 +721,7 @@ int lnsrchmod(double (*funcpt)(double *,int),double *xi,double *jac,double *p,in
 	return retval;
 }
 
-int lnsrchcg(double (*funcpt)(double *,int),double *xi,double *jac,double *p,int N,double * dx,double maxstep,
+int lnsrchcg(double (*funcpt)(double *,int),void(*funcgrad)(double *, int,double *),double *xi,double *jac,double *p,int N,double * dx,double maxstep,
 	double eps2,double stol,double *x,double *jacf) {
 	int retval,i;
 	double alpha,lambda,lambdamin,funcf,funci,lambdaprev,lambdatemp,funcprev;
@@ -784,7 +784,7 @@ int lnsrchcg(double (*funcpt)(double *,int),double *xi,double *jac,double *p,int
 			exit(1);
 		}
 		if (funcf <= funci + alpha *lambda *slopei[0]) {
-			grad_fd(funcpt,x,N,dx,eps2,jacf);
+			grad_fd(funcpt,funcgrad,x,N,dx,eps2,jacf);
 			mmult(jacf,p,slopen,1,N,1);
 			if(fabs(slopen[0]) >= - beta * slopei[0]) {
 					if (lambda == 1.0 && nlen < maxstep) {
@@ -807,7 +807,7 @@ int lnsrchcg(double (*funcpt)(double *,int),double *xi,double *jac,double *p,int
 								exit(1);
 							}
 							if (funcf <= funci + alpha *lambda *slopei[0]) {
-								grad_fd(funcpt,x,N,dx,eps2,jacf);
+								grad_fd(funcpt,funcgrad,x,N,dx,eps2,jacf);
 								mmult(jacf,p,slopen,1,N,1);
 							}
 						}
@@ -846,7 +846,7 @@ int lnsrchcg(double (*funcpt)(double *,int),double *xi,double *jac,double *p,int
 								lambdadiff = lambdainc;
 								funchi = funcf;
 							} else {
-								grad_fd(funcpt,x,N,dx,eps2,jacf);
+								grad_fd(funcpt,funcgrad,x,N,dx,eps2,jacf);
 								mmult(jacf,p,slopen,1,N,1);
 								if (fabs(slopen[0]) >= -beta * slopei[0]) {
 									lambdalo = lambda;
@@ -971,7 +971,7 @@ int stopcheck(double fx,int N,double *xc,double *xf,double *jac,double *dx,doubl
 	return rcode;
 }
 
-int newton_min_func(double (*funcpt)(double *,int),double *xi,int N,double *dx,double fsval,int MAXITER,
+int newton_min_func(double (*funcpt)(double *,int),void(*funcgrad)(double *, int,double *),double *xi,int N,double *dx,double fsval,int MAXITER,
 		int *niter,double eps,double gtol,double stol,double *xf) {
 	int rcode;
 	int i,siter,retval;
@@ -1017,7 +1017,7 @@ int newton_min_func(double (*funcpt)(double *,int),double *xi,int N,double *dx,d
 		exit(1);
 	}
 	
-	grad_fd(funcpt,xi,N,dx,eps2,jac);
+	grad_fd(funcpt,funcgrad,xi,N,dx,eps2,jac);
 	
 	
 	maxstep = 1000.0; // Needs to be set at a much higher value proportional to l2 norm of dx
@@ -1087,7 +1087,7 @@ int newton_min_func(double (*funcpt)(double *,int),double *xi,int N,double *dx,d
 			exit(1);
 		}
 		//printf("%d \n",iter);
-		grad_fd(funcpt,xf,N,dx,eps2,jac);
+		grad_fd(funcpt,funcgrad,xf,N,dx,eps2,jac);
 		rcode = stopcheck(fxf,N,xc,xf,jac,dx,fsval,gtol,stol,retval);
 		hessian_fd(funcpt,xf,N,dx,eps,hess);
 		for(i = 0; i < N;++i) {
@@ -1446,7 +1446,7 @@ int trupdate(double (*funcpt)(double *,int),double *xi,double *jac,double *step,
 		
 }
 
-int newton_min_trust(double (*funcpt)(double *,int),double *xi,int N,double *dx,double fsval,double delta,
+int newton_min_trust(double (*funcpt)(double *,int),void(*funcgrad)(double *, int,double *),double *xi,int N,double *dx,double fsval,double delta,
 		int method,int MAXITER,int *niter,double eps,double gtol,double stol,double *xf) {
 	int rcode,iter;
 	int i,siter,retval;
@@ -1496,7 +1496,7 @@ int newton_min_trust(double (*funcpt)(double *,int),double *xi,int N,double *dx,
 		exit(1);
 	}
 	
-	grad_fd(funcpt,xi,N,dx,eps2,jac);
+	grad_fd(funcpt,funcgrad,xi,N,dx,eps2,jac);
 	
 	
 	maxstep = 1000.0; // Needs to be set at a much higher value proportional to l2 norm of dx
@@ -1575,7 +1575,7 @@ int newton_min_trust(double (*funcpt)(double *,int),double *xi,int N,double *dx,
 			exit(1);
 		}
 
-		grad_fd(funcpt,xf,N,dx,eps2,jac);
+		grad_fd(funcpt,funcgrad,xf,N,dx,eps2,jac);
 		rcode = stopcheck(fxf,N,xc,xf,jac,dx,fsval,gtol,stol,retval);
 		hessian_fd(funcpt,xf,N,dx,eps,hess);
 		for(i = 0; i < N;++i) {

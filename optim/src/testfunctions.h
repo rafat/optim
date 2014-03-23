@@ -25,7 +25,15 @@ void myvaluegrad(
 		double *jac
 );
 
+double quartic(double *x,int N);
+
+void quarticgrad(double *x,int N,double *jac);
+
 double func4(double *x,int N);
+
+double rosenbrock(double *x,int N);
+
+void rosenbrockgrad(double *x,int N,double *g);
 
 double func1(double *x,int N);
 

@@ -34,27 +34,27 @@ int main(void) {
 	int N,i,retval,method;
 	double *xi,*xf;
 
-	N = 4;
+	N = 2;
 
 	xi = (double*) malloc(sizeof(double) * N);
 	xf = (double*) malloc(sizeof(double) * N);
 
 	for (i = 0; i < N;++i) {
-		xi[i] = 3;
+		xi[i] = -1.2;
 	}
-	xi[1] = -1; xi[2] = 0; xi[3] = 1;
+	xi[1] = 1; //xi[2] = 0; xi[3] = 1;
 	//xi[9] = -21.4;
-	method = 5;
-	retval = fminunc(myvalue,NULL,N,xi,method,xf);
+	method = 6;
+	retval = fminunc(rosenbrock,rosenbrockgrad,N,xi,method,xf);
 	//retval = fminunc(myvalue,myvaluegrad,N,xi,method,xf);
 
-	printf("Return Value %d Objective Function %g \n",retval,myvalue(xf,N));
+	printf("Return Value %d Objective Function %g \n",retval,rosenbrock(xf,N));
 
 	printf("Function minimized at : ");
 	mdisplay(xf,1,N);
 
 	//printf("FDX %g \n", (double) FDX);
-	printGradient(myvaluegrad,xf,N);
+	printGradient(rosenbrockgrad,xf,N);
 
 	free(xi);
 	free(xf);

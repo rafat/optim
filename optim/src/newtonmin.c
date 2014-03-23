@@ -398,6 +398,62 @@ void hessian_fd2(double (*funcpt)(double *,int),double *x,int N,double *dx,doubl
 	free(f2);
 }
 
+void fdjac(void (*funcgrad)(double *,int,double *),double *x,int N,double *jac,double *dx,double eps2,double *J) {
+	int i,j;
+	double stepsize,temp,stepmax;
+	double *fj;
+
+	fj = (double*) malloc(sizeof(double) *N);
+
+	for(j = 0; j < N;++j) {
+
+		if (fabs(x[j]) >= (1.0 / fabs(dx[j]))) {
+			stepmax = x[j];
+		} else {
+			stepmax = signx(x[j]) * 1.0 / fabs(dx[j]);
+		}
+
+		stepsize = eps2 * stepmax;
+		temp = x[j];
+		x[j] += stepsize;
+		stepsize = x[j] - temp;
+		funcgrad(x,N,fj);
+
+		for(i = 0;i < N;++i) {
+			J[i*N+j] = (fj[i] - jac[i]) / stepsize;
+		}
+		x[j] = temp;
+
+	}
+
+	free(fj);
+}
+
+void hessian_fdg(void (*funcgrad)(double *,int,double *),double *x,int N,double *jac,double *dx,double eps2,double *H) {
+	int i,j,k;
+
+	fdjac(funcgrad,x,N,jac,dx,eps2,H);
+
+	for(i = 0; i < N;++i) {
+		k = i * N;
+		for(j = 0; j < N;++j) {
+			H[k + j] = (H[k + j] + H[j*N + i]) / 2.0;
+		}
+	}
+}
+
+void hessian_opt(double (*funcpt)(double *,int),void (*funcgrad)(double *,int,double *),double *x,int N,double *jac,
+		double *dx,double eps,double eps2,double *H) {
+
+	if (funcgrad == NULL) {
+		//printf("HESSF \n");
+		hessian_fd(funcpt,x,N,dx,eps,H);
+	} else {
+		//printf("HESSG \n");
+		hessian_fdg(funcgrad,x,N,jac,dx,eps2,H);
+	}
+}
+
 int lnsrch(double (*funcpt)(double *,int),double *xi,double *jac,double *p,int N,double * dx,double maxstep,double stol,double *x) {
 	int retval,i;
 	double alpha,lambda,lambdamin,funcf,funci,lambdaprev,lambdatemp,funcprev;
@@ -1063,7 +1119,8 @@ int newton_min_func(double (*funcpt)(double *,int),void(*funcgrad)(double *, int
 		return rcode;
 	}
 	
-	hessian_fd(funcpt,xi,N,dx,eps2,hess);
+	//hessian_fd(funcpt,xi,N,dx,eps2,hess);
+	hessian_opt(funcpt,funcgrad,xi,N,jac,dx,eps,eps2,hess);
 	
 	for(i = 0; i < N;++i) {
 		xc[i] = xi[i];
@@ -1089,7 +1146,8 @@ int newton_min_func(double (*funcpt)(double *,int),void(*funcgrad)(double *, int
 		//printf("%d \n",iter);
 		grad_fd(funcpt,funcgrad,xf,N,dx,eps2,jac);
 		rcode = stopcheck(fxf,N,xc,xf,jac,dx,fsval,gtol,stol,retval);
-		hessian_fd(funcpt,xf,N,dx,eps,hess);
+		//hessian_fd(funcpt,xf,N,dx,eps,hess);
+		hessian_opt(funcpt,funcgrad,xf,N,jac,dx,eps,eps2,hess);
 		for(i = 0; i < N;++i) {
 			xc[i] = xf[i];
 		}
@@ -1541,7 +1599,8 @@ int newton_min_trust(double (*funcpt)(double *,int),void(*funcgrad)(double *, in
 		return rcode;
 	}
 	
-	hessian_fd(funcpt,xi,N,dx,eps,hess);
+	//hessian_fd(funcpt,xi,N,dx,eps,hess);
+	hessian_opt(funcpt,funcgrad,xi,N,jac,dx,eps,eps2,hess);
 	
 	for(i = 0; i < N;++i) {
 		xc[i] = xi[i];
@@ -1577,7 +1636,8 @@ int newton_min_trust(double (*funcpt)(double *,int),void(*funcgrad)(double *, in
 
 		grad_fd(funcpt,funcgrad,xf,N,dx,eps2,jac);
 		rcode = stopcheck(fxf,N,xc,xf,jac,dx,fsval,gtol,stol,retval);
-		hessian_fd(funcpt,xf,N,dx,eps,hess);
+		//hessian_fd(funcpt,xf,N,dx,eps,hess);
+		hessian_opt(funcpt,funcgrad,xf,N,jac,dx,eps,eps2,hess);
 		for(i = 0; i < N;++i) {
 			xc[i] = xf[i];
 		}

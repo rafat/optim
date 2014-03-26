@@ -98,7 +98,7 @@ int fminunc(double (*funcpt)(double *,int),void(*funcgrad)(double *, int,double 
 	} else if (method == 4) {
 		gtol = pow(eps,1.0/3.0);
 		ftol = gtol * gtol;
-		xtol = gtol * ftol;
+		xtol = eps;
 		if (MAXITER < 1000) {
 			MAXITER = 1000;
 		}
@@ -113,7 +113,7 @@ int fminunc(double (*funcpt)(double *,int),void(*funcgrad)(double *, int,double 
 	} else if (method == 6) {
 		gtol = pow(eps,1.0/3.0);
 		ftol = gtol * gtol;
-		xtol = gtol * ftol;
+		xtol = eps;
 		if (MAXITER < 1000) {
 			MAXITER = 1000;
 		}
@@ -126,4 +126,15 @@ int fminunc(double (*funcpt)(double *,int),void(*funcgrad)(double *, int,double 
 
 	free(dx);
 	return retval;
+}
+
+double fminbnd(double (*funcpt)(double),double a, double b) {
+	double x,t,eps;
+
+	t = 1e-012;
+	eps = macheps();
+
+	brent_local_min(funcpt,a,b,t,eps,&x);
+
+	return x;
 }

@@ -123,10 +123,10 @@ int stopcheck2(double fx,int N,double *xc,double *xf,double *jac,double *dx,doub
 
 int cgpr_mt(double(*funcpt)(double *, int),void(*funcgrad)(double *, int,double *), double *xi, int N, double *dx, int MAXITER,int *niter,
 		double eps,double gtol,double ftol,double xtol,double *xf) {
-	int i, rcode, retval, k, restart;
+	int i, rcode, retval, k, restart,gfdcode;
 	int siter;
 	double *temp, *rk, *pk, *jac, *jacf, *apk;
-	double fsval,fxf,eps2;
+	double fsval,fxf,eps2,fo;
 	double maxstep, dt1, dt2,alpha;
 
 	temp = (double*)malloc(sizeof(double)* 8);
@@ -142,6 +142,7 @@ int cgpr_mt(double(*funcpt)(double *, int),void(*funcgrad)(double *, int,double 
 	restart = N;
 	siter = MAXITER;
 	eps2 = sqrt(eps);
+	gfdcode = 0;
 
 	//xtol = 1.0e-15;
 	//ftol = 1e-10;
@@ -170,7 +171,10 @@ int cgpr_mt(double(*funcpt)(double *, int),void(*funcgrad)(double *, int,double 
 	}
 
 
-	grad_fd(funcpt,funcgrad, xi, N, dx,eps2, jac);
+	gfdcode = grad_fd(funcpt,funcgrad, xi, N, dx,eps2, jac);
+	if (gfdcode == 15) {
+		return 15;
+	}
 	for (i = 0; i < N; ++i) {
 		pk[i] = -jac[i];
 		xf[i] = xi[i];
@@ -180,18 +184,19 @@ int cgpr_mt(double(*funcpt)(double *, int),void(*funcgrad)(double *, int,double 
 
 	if (fxf >= DBL_MAX || fxf <= -DBL_MAX) {
 		printf("Program Exiting as the function value exceeds the maximum double value");
-		exit(1);
+		return 15;
 	}
 
 	if (restart < N) {
 		restart = N;
 	}
 
+	fo = fxf;
+
 
 	while (rcode == 0 && *niter < siter) {
 		*niter = *niter + 1;
 		k++;
-		
 
 		mmult(jac, jac, temp, 1, N, 1);
 		for (i = 0; i < N; ++i) {
@@ -225,9 +230,10 @@ int cgpr_mt(double(*funcpt)(double *, int),void(*funcgrad)(double *, int,double 
 				pk[i] = temp[2] * pk[i] - jac[i];
 			}
 		}
-
 		
-		rcode = stopcheck_mt(fxf, N, xi, xf, jac, dx, fsval, gtol, ftol, retval);
+
+		rcode = stopcheck2_mt(fxf,N,fo,jac,dx,eps,gtol,ftol,retval);
+		fo = fxf;
 		for (i = 0; i < N; ++i) {
 			xi[i] = xf[i];
 		}

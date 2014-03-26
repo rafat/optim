@@ -281,11 +281,13 @@ void linsolve_lower(double *L,int N,double *b,double *x) {
 
 
 
-void hessian_fd(double (*funcpt)(double *,int),double *x,int N,double *dx,double eps,double *f) {
-	int i,j;
+int hessian_fd(double (*funcpt)(double *,int),double *x,int N,double *dx,double eps,double *f) {
+	int i,j,retval;
 	double stepi,stepj,fd,stepmax;
 	double *xi,*xj,*xij;
 	
+	retval = 0;
+
 	fd = pow((double) eps,1.0/3.0);
 	xi = (double*) malloc(sizeof(double) *N);
 	xj = (double*) malloc(sizeof(double) *N);
@@ -319,7 +321,7 @@ void hessian_fd(double (*funcpt)(double *,int),double *x,int N,double *dx,double
 			f[i*N+j] = ((funcpt(xij,N) - funcpt(xi,N)) - (funcpt(xj,N) - funcpt(x,N)))/(stepi * stepj);
 			if (f[i*N+j] >= DBL_MAX || f[i*N+j] <= -DBL_MAX) {
 				printf("Program Exiting as the function value exceeds the maximum double value");
-				exit(1);
+				return 15;;
 			}
 			xj[j] -= stepj;
 			xij[j] -= stepj;
@@ -330,11 +332,12 @@ void hessian_fd(double (*funcpt)(double *,int),double *x,int N,double *dx,double
 	free(xi);
 	free(xj);
 	free(xij);
+	return retval;
 	
 }
 
-void hessian_fd2(double (*funcpt)(double *,int),double *x,int N,double *dx,double eps,double *f) {
-	int i,j,step;
+int hessian_fd2(double (*funcpt)(double *,int),double *x,int N,double *dx,double eps,double *f) {
+	int i,j,step,retval;
 	double fd,temp,ft,fc,temp2,stepmax;
 	double *stepsize,*f2;
 	
@@ -342,11 +345,11 @@ void hessian_fd2(double (*funcpt)(double *,int),double *x,int N,double *dx,doubl
 	
 	stepsize = (double*) malloc(sizeof(double) *N);
 	f2 = (double*) malloc(sizeof(double) *N);
-	
+	retval = 0;
 	fc = funcpt(x,N);
 	if (fc >= DBL_MAX || fc <= -DBL_MAX) {
 		printf("Program Exiting as the function value exceeds the maximum double value");
-		exit(1);
+		return 15;
 	}
 	
 	for(i = 0; i < N;++i) {
@@ -363,7 +366,7 @@ void hessian_fd2(double (*funcpt)(double *,int),double *x,int N,double *dx,doubl
 		f2[i] = funcpt(x,N);
 		if (f2[i] >= DBL_MAX || f2[i] <= -DBL_MAX) {
 			printf("Program Exiting as the function value exceeds the maximum double value");
-			exit(1);
+			return 15;
 		}
 		x[i] = temp;
 	}
@@ -375,7 +378,7 @@ void hessian_fd2(double (*funcpt)(double *,int),double *x,int N,double *dx,doubl
 		ft = funcpt(x,N);
 		if (ft >= DBL_MAX || ft <= -DBL_MAX) {
 			printf("Program Exiting as the function value exceeds the maximum double value");
-			exit(1);
+			return 15;
 		}
 		f[step+i] = (fc - f2[i] + ft - f2[i])/(stepsize[i] * stepsize[i]);
 		x[i] = temp + stepsize[i];
@@ -385,7 +388,7 @@ void hessian_fd2(double (*funcpt)(double *,int),double *x,int N,double *dx,doubl
 			ft = funcpt(x,N);
 			if (ft >= DBL_MAX || ft <= -DBL_MAX) {
 				printf("Program Exiting as the function value exceeds the maximum double value");
-				exit(1);
+				return 15;
 			}
 			f[step+j] = (fc - f2[i] + ft - f2[j])/(stepsize[i] * stepsize[j]);
 			x[j] = temp2;
@@ -396,6 +399,7 @@ void hessian_fd2(double (*funcpt)(double *,int),double *x,int N,double *dx,doubl
 	
 	free(stepsize);
 	free(f2);
+	return retval;
 }
 
 void fdjac(void (*funcgrad)(double *,int,double *),double *x,int N,double *jac,double *dx,double eps2,double *J) {
@@ -442,16 +446,18 @@ void hessian_fdg(void (*funcgrad)(double *,int,double *),double *x,int N,double 
 	}
 }
 
-void hessian_opt(double (*funcpt)(double *,int),void (*funcgrad)(double *,int,double *),double *x,int N,double *jac,
+int hessian_opt(double (*funcpt)(double *,int),void (*funcgrad)(double *,int,double *),double *x,int N,double *jac,
 		double *dx,double eps,double eps2,double *H) {
-
+	int retval;
 	if (funcgrad == NULL) {
 		//printf("HESSF \n");
-		hessian_fd(funcpt,x,N,dx,eps,H);
+		retval = hessian_fd(funcpt,x,N,dx,eps,H);
 	} else {
 		//printf("HESSG \n");
 		hessian_fdg(funcgrad,x,N,jac,dx,eps2,H);
 	}
+
+	return retval;
 }
 
 int lnsrch(double (*funcpt)(double *,int),double *xi,double *jac,double *p,int N,double * dx,double maxstep,double stol,double *x) {
@@ -498,7 +504,7 @@ int lnsrch(double (*funcpt)(double *,int),double *xi,double *jac,double *p,int N
 	funci = funcpt(xi,N);
 	if (funci >= DBL_MAX || funci <= -DBL_MAX) {
 		printf("Program Exiting as the function value exceeds the maximum double value");
-		exit(1);
+		return 15;
 	}
 	while (retval > 1) {
 		for(i = 0; i < N;++i) {
@@ -508,11 +514,7 @@ int lnsrch(double (*funcpt)(double *,int),double *xi,double *jac,double *p,int N
 		funcf = funcpt(x,N);
 		if (funcf >= DBL_MAX || funcf <= -DBL_MAX) {
 			printf("Program Exiting as the function value exceeds the maximum double value");
-			exit(1);
-		}
-		if (funcf >= DBL_MAX || funcf <= -DBL_MAX) {
-			printf("Program Exiting as the function value exceeds the maximum double value");
-			exit(1);
+			return 15;
 		}
 
 		//printf("lambda %g %g %g \n",funcf,funci,lambda);
@@ -569,7 +571,7 @@ int lnsrch(double (*funcpt)(double *,int),double *xi,double *jac,double *p,int N
 
 int lnsrchmod(double (*funcpt)(double *,int),void(*funcgrad)(double *, int,double *),double *xi,double *jac,double *p,int N,double * dx,double maxstep,
 		double eps2,double stol,double *x,double *jacf) {
-	int retval,i;
+	int retval,i,gfdcode;
 	double alpha,lambda,lambdamin,funcf,funci,lambdaprev,lambdatemp,funcprev;
 	double lambda2,lambdaprev2,ll,den,rell,nlen;
 	double *slopei,*temp1,*temp2,*ab,*rcheck,*pl;
@@ -588,6 +590,7 @@ int lnsrchmod(double (*funcpt)(double *,int),void(*funcgrad)(double *, int,doubl
 	lambda = 1.0;
 	nlen = 0.0;
 	beta = 0.4;
+	gfdcode = 0;
 	
 	for(i = 0; i < N;++i) {
 		nlen += dx[i] * p[i] * dx[i] * p[i];
@@ -617,7 +620,7 @@ int lnsrchmod(double (*funcpt)(double *,int),void(*funcgrad)(double *, int,doubl
 	
 	if (funci >= DBL_MAX || funci <= -DBL_MAX) {
 		printf("Program Exiting as the function value exceeds the maximum double value");
-		exit(1);
+		return 15;
 	}
 	while (retval > 1) {
 		for(i = 0; i < N;++i) {
@@ -628,10 +631,13 @@ int lnsrchmod(double (*funcpt)(double *,int),void(*funcgrad)(double *, int,doubl
 		printf("%g lmax %g %g \n",lambda,funcf,funci + alpha *lambda *slopei[0]);
 		if (funcf >= DBL_MAX || funcf <= -DBL_MAX) {
 			printf("Program Exiting as the function value exceeds the maximum double value");
-			exit(1);
+			return 15;
 		}
 		if (funcf <= funci + alpha *lambda *slopei[0]) {
-			grad_fd(funcpt,funcgrad,x,N,dx,eps2,jacf);
+			gfdcode = grad_fd(funcpt,funcgrad,x,N,dx,eps2,jacf);
+			if (gfdcode == 15) {
+				return 15;
+			}
 			mmult(jacf,p,slopen,1,N,1);
 			
 			if(slopen[0] < beta * slopei[0]) {
@@ -654,10 +660,13 @@ int lnsrchmod(double (*funcpt)(double *,int),void(*funcgrad)(double *, int,doubl
 							funcf = funcpt(x,N);
 							if (funcf >= DBL_MAX || funcf <= -DBL_MAX) {
 								printf("Program Exiting as the function value exceeds the maximum double value");
-								exit(1);
+								return 15;
 							}
 							if (funcf <= funci + alpha *lambda *slopei[0]) {
-								grad_fd(funcpt,funcgrad,x,N,dx,eps2,jacf);
+								gfdcode = grad_fd(funcpt,funcgrad,x,N,dx,eps2,jacf);
+								if (gfdcode == 15) {
+									return 15;
+								}
 								mmult(jacf,p,slopen,1,N,1);
 							}
 						}
@@ -694,13 +703,16 @@ int lnsrchmod(double (*funcpt)(double *,int),void(*funcgrad)(double *, int,doubl
 							funcf = funcpt(x,N);
 							if (funcf >= DBL_MAX || funcf <= -DBL_MAX) {
 								printf("Program Exiting as the function value exceeds the maximum double value");
-								exit(1);
+								return 15;
 							}
 							if (funcf > funci + alpha *lambda *slopei[0]) {
 								lambdadiff = lambdainc;
 								funchi = funcf;
 							} else {
-								grad_fd(funcpt,funcgrad,x,N,dx,eps2,jacf);
+								gfdcode = grad_fd(funcpt,funcgrad,x,N,dx,eps2,jacf);
+								if (gfdcode == 15) {
+									return 15;
+								}
 								mmult(jacf,p,slopen,1,N,1);
 								if (slopen[0] < beta * slopei[0]) {
 									lambdalo = lambda;
@@ -779,7 +791,7 @@ int lnsrchmod(double (*funcpt)(double *,int),void(*funcgrad)(double *, int,doubl
 
 int lnsrchcg(double (*funcpt)(double *,int),void(*funcgrad)(double *, int,double *),double *xi,double *jac,double *p,int N,double * dx,double maxstep,
 	double eps2,double stol,double *x,double *jacf) {
-	int retval,i;
+	int retval,i,gfdcode;
 	double alpha,lambda,lambdamin,funcf,funci,lambdaprev,lambdatemp,funcprev;
 	double lambda2,lambdaprev2,ll,den,rell,nlen;
 	double *slopei,*temp1,*temp2,*ab,*rcheck,*pl;
@@ -798,6 +810,7 @@ int lnsrchcg(double (*funcpt)(double *,int),void(*funcgrad)(double *, int,double
 	lambda = 1.0;
 	nlen = 0.0;
 	beta = 0.9;
+	gfdcode = 0;
 	
 	for(i = 0; i < N;++i) {
 		nlen += dx[i] * p[i] * dx[i] * p[i];
@@ -827,7 +840,7 @@ int lnsrchcg(double (*funcpt)(double *,int),void(*funcgrad)(double *, int,double
 	
 	if (funci >= DBL_MAX || funci <= -DBL_MAX) {
 		printf("Program Exiting as the function value exceeds the maximum double value");
-		exit(1);
+		return 15;
 	}
 	while (retval > 1) {
 		for(i = 0; i < N;++i) {
@@ -837,10 +850,13 @@ int lnsrchcg(double (*funcpt)(double *,int),void(*funcgrad)(double *, int,double
 		funcf = funcpt(x,N);
 		if (funcf >= DBL_MAX || funcf <= -DBL_MAX) {
 			printf("Program Exiting as the function value exceeds the maximum double value");
-			exit(1);
+			return 15;
 		}
 		if (funcf <= funci + alpha *lambda *slopei[0]) {
-			grad_fd(funcpt,funcgrad,x,N,dx,eps2,jacf);
+			gfdcode = grad_fd(funcpt,funcgrad,x,N,dx,eps2,jacf);
+			if (gfdcode == 15) {
+				return 15;
+			}
 			mmult(jacf,p,slopen,1,N,1);
 			if(fabs(slopen[0]) >= - beta * slopei[0]) {
 					if (lambda == 1.0 && nlen < maxstep) {
@@ -860,10 +876,13 @@ int lnsrchcg(double (*funcpt)(double *,int),void(*funcgrad)(double *, int,double
 							funcf = funcpt(x,N);
 							if (funcf >= DBL_MAX || funcf <= -DBL_MAX) {
 								printf("Program Exiting as the function value exceeds the maximum double value");
-								exit(1);
+								return 15;
 							}
 							if (funcf <= funci + alpha *lambda *slopei[0]) {
-								grad_fd(funcpt,funcgrad,x,N,dx,eps2,jacf);
+								gfdcode = grad_fd(funcpt,funcgrad,x,N,dx,eps2,jacf);
+								if (gfdcode == 15) {
+									return 15;
+								}
 								mmult(jacf,p,slopen,1,N,1);
 							}
 						}
@@ -896,13 +915,16 @@ int lnsrchcg(double (*funcpt)(double *,int),void(*funcgrad)(double *, int,double
 							funcf = funcpt(x,N);
 							if (funcf >= DBL_MAX || funcf <= -DBL_MAX) {
 								printf("Program Exiting as the function value exceeds the maximum double value");
-								exit(1);
+								return 15;
 							}
 							if (funcf > funci + alpha *lambda *slopei[0]) {
 								lambdadiff = lambdainc;
 								funchi = funcf;
 							} else {
-								grad_fd(funcpt,funcgrad,x,N,dx,eps2,jacf);
+								gfdcode = grad_fd(funcpt,funcgrad,x,N,dx,eps2,jacf);
+								if (gfdcode == 15) {
+									return 15;
+								}
 								mmult(jacf,p,slopen,1,N,1);
 								if (fabs(slopen[0]) >= -beta * slopei[0]) {
 									lambdalo = lambda;
@@ -987,6 +1009,10 @@ int stopcheck(double fx,int N,double *xc,double *xf,double *jac,double *dx,doubl
 		rcode = 5;
 		return rcode;
 	}
+	if (retval == 15) {
+		rcode = 15;
+		return rcode;
+	}
 	scheck = (double*) malloc(sizeof(double) *N);
 	
 	if (fabs(fx) > fabs(fsval)) {
@@ -1004,7 +1030,7 @@ int stopcheck(double fx,int N,double *xc,double *xf,double *jac,double *dx,doubl
 	}
 	
 	stop0 = array_max_abs(scheck,N);
-	
+
 	if (stop0 <= gtol) {
 		rcode = 1;
 	} else {
@@ -1029,7 +1055,7 @@ int stopcheck(double fx,int N,double *xc,double *xf,double *jac,double *dx,doubl
 
 int newton_min_func(double (*funcpt)(double *,int),void(*funcgrad)(double *, int,double *),double *xi,int N,double *dx,double fsval,int MAXITER,
 		int *niter,double eps,double gtol,double stol,double *xf) {
-	int rcode;
+	int rcode,gfdcode,hdcode;
 	int i,siter,retval;
 	double dt1,dt2,eps2;
 	double fx,num,den,stop0,maxstep,fxf;
@@ -1059,6 +1085,8 @@ int newton_min_func(double (*funcpt)(double *,int),void(*funcgrad)(double *, int
 	*niter = 0;
 	siter = MAXITER;
 	eps2 = sqrt(eps);
+	gfdcode = 0;
+	hdcode = 0;
 	//gtol = pow((double) FDVAL,1.0/3.0);
 	
 	//stol = gtol * gtol;
@@ -1070,10 +1098,13 @@ int newton_min_func(double (*funcpt)(double *,int),void(*funcgrad)(double *, int
 	fx = funcpt(xi,N);
 	if (fx >= DBL_MAX || fx <= -DBL_MAX) {
 		printf("Program Exiting as the function value exceeds the maximum double value");
-		exit(1);
+		return 15;
 	}
 	
-	grad_fd(funcpt,funcgrad,xi,N,dx,eps2,jac);
+	gfdcode = grad_fd(funcpt,funcgrad,xi,N,dx,eps2,jac);
+	if (gfdcode == 15) {
+		return 15;
+	}
 	
 	
 	maxstep = 1000.0; // Needs to be set at a much higher value proportional to l2 norm of dx
@@ -1093,7 +1124,7 @@ int newton_min_func(double (*funcpt)(double *,int),void(*funcgrad)(double *, int
 	}
 	
 	//printf("dt1 dt2 %g \n", maxstep);
-
+	//maxstep = 1e15;
 	//Check Stop0
 	if (fabs(fx) > fabs(fsval)) {
 			den = fabs(fx);
@@ -1120,7 +1151,10 @@ int newton_min_func(double (*funcpt)(double *,int),void(*funcgrad)(double *, int
 	}
 	
 	//hessian_fd(funcpt,xi,N,dx,eps2,hess);
-	hessian_opt(funcpt,funcgrad,xi,N,jac,dx,eps,eps2,hess);
+	hdcode = hessian_opt(funcpt,funcgrad,xi,N,jac,dx,eps,eps2,hess);
+	if (hdcode == 15) {
+		return 15;
+	}
 	
 	for(i = 0; i < N;++i) {
 		xc[i] = xi[i];
@@ -1128,26 +1162,31 @@ int newton_min_func(double (*funcpt)(double *,int),void(*funcgrad)(double *, int
 	
 	while (rcode == 0 && *niter < siter) {
 		*niter = *niter + 1;
-		
 		modelhess(hess,N,dx,eps,L);
+
 		scale(jac,1,N,-1.0);
 		//mdisplay(hess,N,N);
 		
 		linsolve_lower(L,N,jac,step);
-		
+
 		scale(jac,1,N,-1.0);
 		retval = lnsrch(funcpt,xc,jac,step,N,dx,maxstep,stol,xf); 
-		
 		fxf = funcpt(xf,N);
 		if (fxf >= DBL_MAX || fxf <= -DBL_MAX) {
 			printf("Program Exiting as the function value exceeds the maximum double value");
-			exit(1);
+			return 15;
 		}
 		//printf("%d \n",iter);
-		grad_fd(funcpt,funcgrad,xf,N,dx,eps2,jac);
+		gfdcode = grad_fd(funcpt,funcgrad,xf,N,dx,eps2,jac);
+		if (gfdcode == 15) {
+			return 15;
+		}
 		rcode = stopcheck(fxf,N,xc,xf,jac,dx,fsval,gtol,stol,retval);
 		//hessian_fd(funcpt,xf,N,dx,eps,hess);
-		hessian_opt(funcpt,funcgrad,xf,N,jac,dx,eps,eps2,hess);
+		hdcode = hessian_opt(funcpt,funcgrad,xf,N,jac,dx,eps,eps2,hess);
+		if (hdcode == 15) {
+			return 15;
+		}
 		for(i = 0; i < N;++i) {
 			xc[i] = xf[i];
 		}
@@ -1225,7 +1264,7 @@ int trsrch(double (*funcpt)(double *,int),double *xi,double *jac,double *sN,int 
 		}
 	}
 	
-	while (retval >= 2) {
+	while (retval >= 2 && retval != 15) {
 		trstep(jac,sN,N,dx,L,hess,nlen,ioval,eps,step);
 		ioval[2] = ioval[0];
 		retval = trupdate(funcpt,xi,jac,step,N,dx,maxstep,retval,L,hess,stol,method,ioval,xprev,&funcprev,x);
@@ -1392,7 +1431,7 @@ int trupdate(double (*funcpt)(double *,int),double *xi,double *jac,double *step,
 	funci = funcpt(xi,N);
 	if (funci >= DBL_MAX || funci <= -DBL_MAX) {
 		printf("Program Exiting as the function value exceeds the maximum double value");
-		exit(1);
+		return 15;
 	}
 	
 	madd(xi,step,x,1,N);
@@ -1400,7 +1439,7 @@ int trupdate(double (*funcpt)(double *,int),double *xi,double *jac,double *step,
 	funcf = funcpt(x,N);
 	if (funcf >= DBL_MAX || funcf <= -DBL_MAX) {
 		printf("Program Exiting as the function value exceeds the maximum double value");
-		exit(1);
+		return 15;
 	}
 	
 	df = funcf - funci;
@@ -1506,9 +1545,9 @@ int trupdate(double (*funcpt)(double *,int),double *xi,double *jac,double *step,
 
 int newton_min_trust(double (*funcpt)(double *,int),void(*funcgrad)(double *, int,double *),double *xi,int N,double *dx,double fsval,double delta,
 		int method,int MAXITER,int *niter,double eps,double gtol,double stol,double *xf) {
-	int rcode,iter;
-	int i,siter,retval;
-	double dt1,dt2,eps2;
+	int rcode,iter,gfdcode,hdcode;
+	int i,siter,retval,fdiff;
+	double dt1,dt2,eps2,eps3;
 	double fx,num,den,stop0,maxstep,fxf;
 	double *jac,*hess,*scheck,*xc,*L,*step;
 	double *ioval;
@@ -1537,7 +1576,10 @@ int newton_min_trust(double (*funcpt)(double *,int),void(*funcgrad)(double *, in
 	rcode = 0;
 	*niter = 0;
 	siter = MAXITER;
+	eps3 = pow(eps,(double) 1.0/3.0);
 	eps2 = sqrt(eps);
+	gfdcode = 0;
+	hdcode = 0;
 	//set values
 	
 	if (delta <= 0.0) {
@@ -1551,11 +1593,15 @@ int newton_min_trust(double (*funcpt)(double *,int),void(*funcgrad)(double *, in
 	fx = funcpt(xi,N);
 	if (fx >= DBL_MAX || fx <= -DBL_MAX) {
 		printf("Program Exiting as the function value exceeds the maximum double value");
-		exit(1);
+		return 15;
 	}
 	
-	grad_fd(funcpt,funcgrad,xi,N,dx,eps2,jac);
-	
+	gfdcode = grad_fd(funcpt,funcgrad,xi,N,dx,eps2,jac);
+	if (gfdcode == 15) {
+		return 15;
+	}
+	fdiff = 1;
+	//grad_cd(funcpt,funcgrad,xi,N,dx,eps3,jac);
 	
 	maxstep = 1000.0; // Needs to be set at a much higher value proportional to l2 norm of dx
 	dt1 = dt2 = 0.0;
@@ -1600,7 +1646,10 @@ int newton_min_trust(double (*funcpt)(double *,int),void(*funcgrad)(double *, in
 	}
 	
 	//hessian_fd(funcpt,xi,N,dx,eps,hess);
-	hessian_opt(funcpt,funcgrad,xi,N,jac,dx,eps,eps2,hess);
+	hdcode = hessian_opt(funcpt,funcgrad,xi,N,jac,dx,eps,eps2,hess);
+	if (hdcode == 15) {
+		return 15;
+	}
 	
 	for(i = 0; i < N;++i) {
 		xc[i] = xi[i];
@@ -1631,13 +1680,20 @@ int newton_min_trust(double (*funcpt)(double *,int),void(*funcgrad)(double *, in
 		fxf = funcpt(xf,N);
 		if (fxf >= DBL_MAX || fxf <= -DBL_MAX) {
 			printf("Program Exiting as the function value exceeds the maximum double value");
-			exit(1);
+			return 15;
 		}
 
-		grad_fd(funcpt,funcgrad,xf,N,dx,eps2,jac);
+		gfdcode = grad_fd(funcpt,funcgrad,xf,N,dx,eps2,jac);
+		if (gfdcode == 15) {
+			return 15;
+		}
+		//grad_cd(funcpt,funcgrad,xf,N,dx,eps3,jac);
 		rcode = stopcheck(fxf,N,xc,xf,jac,dx,fsval,gtol,stol,retval);
 		//hessian_fd(funcpt,xf,N,dx,eps,hess);
-		hessian_opt(funcpt,funcgrad,xf,N,jac,dx,eps,eps2,hess);
+		hdcode = hessian_opt(funcpt,funcgrad,xf,N,jac,dx,eps,eps2,hess);
+		if (hdcode == 15) {
+			return 15;
+		}
 		for(i = 0; i < N;++i) {
 			xc[i] = xf[i];
 		}
@@ -1689,7 +1745,7 @@ int trsrch_ddl(double (*funcpt)(double *,int),double *xi,double *jac,double *sN,
 	nlen = sqrt(nlen);
 	funcprev = 0.0;
 	
-	while (retval >= 2) {
+	while (retval >= 2 && retval != 15) {
 		trstep_ddl(jac,sN,N,dx,maxstep,L,hess,nlen,ioval,ssd,v,step);
 		retval = trupdate(funcpt,xi,jac,step,N,dx,maxstep,retval,L,hess,stol,method,ioval,xprev,&funcprev,x);
 	}

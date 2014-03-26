@@ -35,6 +35,16 @@ double rosenbrock(double *x,int N);
 
 void rosenbrockgrad(double *x,int N,double *g);
 
+double brown(double *x,int N);
+
+void browngrad(double *x,int N,double *g);
+
+double powell(double *x,int N);
+
+void powellgrad(double *x,int N,double *g);
+
+double humps(double x);
+
 double func1(double *x,int N);
 
 #ifdef __cplusplus

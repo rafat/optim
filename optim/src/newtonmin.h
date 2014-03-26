@@ -16,15 +16,15 @@ double modelhess(double *A,int N,double *dx,double eps,double *L);
 
 void linsolve_lower(double *L,int N,double *b,double *x);
 
-void hessian_fd(double (*funcpt)(double *,int),double *x,int N,double *dx,double eps,double *f);
+int hessian_fd(double (*funcpt)(double *,int),double *x,int N,double *dx,double eps,double *f);
 
-void hessian_fd2(double (*funcpt)(double *,int),double *x,int N,double *dx,double eps,double *f);
+int hessian_fd2(double (*funcpt)(double *,int),double *x,int N,double *dx,double eps,double *f);
 
 void fdjac(void (*funcgrad)(double *,int,double *),double *x,int N,double *jac,double *dx,double eps2,double *J);
 
 void hessian_fdg(void (*funcgrad)(double *,int,double *),double *x,int N,double *jac,double *dx,double eps2,double *H);
 
-void hessian_opt(double (*funcpt)(double *,int),void (*funcgrad)(double *,int,double *),double *x,int N,double *jac,
+int hessian_opt(double (*funcpt)(double *,int),void (*funcgrad)(double *,int,double *),double *x,int N,double *jac,
 		double *dx,double eps,double eps2,double *H);
 
 int lnsrch(double (*funcpt)(double *,int),double *xi,double *jac,double *p,int N,double * dx,double maxstep,double stol,double *x);

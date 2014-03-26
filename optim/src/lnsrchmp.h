@@ -25,11 +25,14 @@ int stopcheck_mt(double fx, int N, double *xc, double *xf, double *jac, double *
 
 int stopcheck2_mt(double fx, int N, double fo, double *jac, double *dx, double eps,double stoptol, double functol, int retval);
 
-void grad_fd(double(*funcpt)(double *, int),void(*funcgrad)(double *, int,double *), double *x, int N, double *dx, double eps2, double *f);
+int grad_fd(double(*funcpt)(double *, int),void(*funcgrad)(double *, int,double *), double *x, int N, double *dx, double eps2, double *f);
 
-void grad_cd(double(*funcpt)(double *, int), double *x, int N, double *dx, double eps2, double *f);
+int grad_cd(double(*funcpt)(double *, int),void(*funcgrad)(double *, int,double *), double *x, int N, double *dx,
+		double eps3, double *f);
 
-void grad_calc(double(*funcpt)(double *, int), double *x, int N, double *dx, double eps2, double *f);
+int grad_calc2(double(*funcpt)(double *, int), double *x, int N, double *dx, double eps3, double *f);
+
+int grad_calc(double(*funcpt)(double *, int), double *x, int N, double *dx, double eps2, double *f);
 
 int cstep(double *stx, double *fx, double *dx, double *sty, double *fy, double *dy, double *stp, double *fp, double *dp, int *brackt,
 	double  stpmin, double stpmax);

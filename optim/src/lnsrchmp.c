@@ -62,29 +62,82 @@ double l2norm(double *vec, int N) {
 	return l2;
 }
 
-void grad_fd(double(*funcpt)(double *, int),void(*funcgrad)(double *, int,double *), double *x, int N, double *dx,
+int grad_fd(double(*funcpt)(double *, int),void(*funcgrad)(double *, int,double *), double *x, int N, double *dx,
 		double eps2, double *f) {
+	int retval;
+	retval = 0;
 	if (funcgrad == NULL) {
 		//printf("FD Gradient \n");
-		grad_calc(funcpt,x,N,dx,eps2,f);
+		retval = grad_calc(funcpt,x,N,dx,eps2,f);
 	} else {
 		//printf("Analytic gradient \n");
 		funcgrad(x,N,f);
 	}
 
-}
-
-void grad_cd(double(*funcpt)(double *, int), double *x, int N, double *dx, double eps, double *f) {
+	return retval;
 
 }
 
-void grad_calc(double(*funcpt)(double *, int), double *x, int N, double *dx, double eps2, double *f) {
-	int i, j;
+int grad_cd(double(*funcpt)(double *, int),void(*funcgrad)(double *, int,double *), double *x, int N, double *dx,
+		double eps3, double *f) {
+	int retval;
+	retval = 0;
+	if (funcgrad == NULL) {
+		//printf("FD Gradient \n");
+		retval = grad_calc2(funcpt,x,N,dx,eps3,f);
+	} else {
+		//printf("Analytic gradient \n");
+		funcgrad(x,N,f);
+	}
+	return retval;
+
+}
+
+int grad_calc2(double(*funcpt)(double *, int), double *x, int N, double *dx, double eps3, double *f) {
+	int j,retval;
+	double stepsize,stepmax,temp;
+	double fp,fm;
+
+	retval = 0;
+
+	for (j = 0; j < N;++j) {
+		if (fabs(x[j]) >= 1.0 / fabs(dx[j])) {
+			stepmax = x[j];
+		}
+		else {
+			stepmax = signx(x[j]) * 1.0 / fabs(dx[j]);
+		}
+
+		stepsize = stepmax * eps3;
+		temp = x[j];
+		x[j] += stepsize;
+		stepsize = x[j] - temp;
+		fp = funcpt(x,N);
+		if (fp >= DBL_MAX || fp <= -DBL_MAX) {
+			printf("Program Exiting as the function value exceeds the maximum double value");
+			return 15;
+		}
+		x[j] = temp - stepsize;
+		fm = funcpt(x,N);
+		if (fm >= DBL_MAX || fm <= -DBL_MAX) {
+			printf("Program Exiting as the function value exceeds the maximum double value");
+			return 15;
+		}
+		f[j] = (fp - fm)/ (2 * stepsize);
+		x[j] = temp;
+	}
+
+	return retval;
+}
+
+int grad_calc(double(*funcpt)(double *, int), double *x, int N, double *dx, double eps2, double *f) {
+	int i, j,retval;
 	double step, fd, stepmax;
 	double *xi;
 
 	//fd = sqrt(eps);
 	fd = eps2; // square root of macheps
+	retval = 0;
 	xi = (double*)malloc(sizeof(double)*N);
 
 	for (i = 0; i < N; ++i) {
@@ -102,12 +155,13 @@ void grad_calc(double(*funcpt)(double *, int), double *x, int N, double *dx, dou
 		f[i] = (funcpt(xi, N) - funcpt(x, N)) / step;
 		if (f[i] >= DBL_MAX || f[i] <= -DBL_MAX) {
 			printf("Program Exiting as the function value exceeds the maximum double value");
-			exit(1);
+			return 15;
 		}
 		//xi[i] -= step;
 	}
 
 	free(xi);
+	return retval;
 
 }
 
@@ -119,6 +173,10 @@ int stopcheck2_mt(double fx, int N, double fo, double *jac, double *dx, double e
 
 	if (retval == 3) {
 		rcode = 4;
+		return rcode;
+	}
+	if (retval == 15) {
+		rcode = 15;
 		return rcode;
 	}
 
@@ -135,7 +193,7 @@ int stopcheck2_mt(double fx, int N, double fo, double *jac, double *dx, double e
 	if (nrmnx < stoptol) {
 		return 1; // Successful Convergence
 	} else if (relfit < functol) {
-		return 5;
+		return 6; // Relative fit less than function tolerance
 	}
 
 	return rcode;
@@ -151,6 +209,10 @@ int stopcheck_mt(double fx, int N, double *xc, double *xf, double *jac, double *
 
 	if (retval == 3) {
 		rcode = 4;
+		return rcode;
+	}
+	if (retval == 15) {
+		rcode = 15;
 		return rcode;
 	}
 	
@@ -502,9 +564,9 @@ int cvsrch(double(*funcpt)(double *, int),void(*funcgrad)(double *, int,double *
 		*f = funcpt(x, N);
 		if (*f >= DBL_MAX || *f <= -DBL_MAX) {
 			printf("Program Exiting as the function value exceeds the maximum double value");
-			exit(1);
+			return 15;
 		}
-		grad_fd(funcpt,funcgrad, x, N, dx, eps2,g);
+		grad_cd(funcpt,funcgrad, x, N, dx, eps2,g);
 		nfev++;
 
 		//printf("ITER %d stp %g \n", nfev,stp);

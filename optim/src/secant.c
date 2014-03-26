@@ -142,7 +142,7 @@ static void inithess_naive(double *H,int N,double fi,double fsval,double *dx) {
 
 int bfgs_min_naive(double (*funcpt)(double *,int),void(*funcgrad)(double *, int,double *),double *xi,int N,double *dx,double fsval,int MAXITER,
 		double eps,double *xf)  {
-	int rcode,iter;
+	int rcode,iter,gfdcode;
 	int i,siter,retval;
 	double gtol,stol,dt1,dt2;
 	double fx,num,den,stop0,maxstep,fxf,eps2;
@@ -176,6 +176,7 @@ int bfgs_min_naive(double (*funcpt)(double *,int),void(*funcgrad)(double *, int,
 	
 	stol = gtol * gtol;
 	eps2 = sqrt(eps);
+	gfdcode = 0;
 	//set values
 	for(i = 0; i < N;++i) {
 		xi[i] *= dx[i];
@@ -184,10 +185,13 @@ int bfgs_min_naive(double (*funcpt)(double *,int),void(*funcgrad)(double *, int,
 	fx = funcpt(xi,N);
 	if (fx >= DBL_MAX || fx <= -DBL_MAX) {
 		printf("Program Exiting as the function value exceeds the maximum double value");
-		exit(1);
+		return 15;
 	}
 	
-	grad_fd(funcpt,funcgrad,xi,N,dx,eps2,jac);
+	gfdcode = grad_fd(funcpt,funcgrad,xi,N,dx,eps2,jac);
+	if (gfdcode == 15) {
+		return 15;
+	}
 	
 	
 	maxstep = 1000.0; // Needs to be set at a much higher value proportional to l2 norm of dx
@@ -257,10 +261,13 @@ int bfgs_min_naive(double (*funcpt)(double *,int),void(*funcgrad)(double *, int,
 		fxf = funcpt(xf,N);
 		if (fxf >= DBL_MAX || fxf <= -DBL_MAX) {
 			printf("Program Exiting as the function value exceeds the maximum double value");
-			exit(1);
+			return 15;
 		}
 		//printf("%d %g \n",iter,fxf);
-		grad_fd(funcpt,funcgrad,xf,N,dx,eps2,jacf);
+		gfdcode = grad_fd(funcpt,funcgrad,xf,N,dx,eps2,jacf);
+		if (gfdcode == 15) {
+			return 15;
+		}
 		rcode = stopcheck(fxf,N,xc,xf,jacf,dx,fsval,gtol,stol,retval);
 		//hessian_fd(funcpt,xf,N,dx,hess);
 		bfgs_naive(hess,N,eps,xc,xf,jac,jacf);
@@ -391,7 +398,7 @@ void bfgs_factored(double *H,int N,double eps,double *xi,double *xf,double *jac,
 
 int bfgs_min(double (*funcpt)(double *,int),void(*funcgrad)(double *, int,double *),double *xi,int N,double *dx,double fsval,int MAXITER,int *niter,
 		double eps,double gtol,double stol,double *xf)  {
-	int rcode;
+	int rcode,gfdcode;
 	int i,siter,retval;
 	double dt1,dt2;
 	double fx,num,den,stop0,maxstep,fxf,eps2;
@@ -422,7 +429,8 @@ int bfgs_min(double (*funcpt)(double *,int),void(*funcgrad)(double *, int,double
 	*niter = 0;
 	siter = MAXITER;
 	eps2 = sqrt(eps);
-	
+	gfdcode = 0;
+
 	//set values
 	for(i = 0; i < N;++i) {
 		xi[i] *= dx[i];
@@ -431,12 +439,15 @@ int bfgs_min(double (*funcpt)(double *,int),void(*funcgrad)(double *, int,double
 	fx = funcpt(xi,N);
 	if (fx >= DBL_MAX || fx <= -DBL_MAX) {
 		printf("Program Exiting as the function value exceeds the maximum double value");
-		exit(1);
+		return 15;
 	}
-	
-	grad_fd(funcpt,funcgrad,xi,N,dx,eps2,jac);
-	
-	
+
+	gfdcode = grad_fd(funcpt,funcgrad,xi,N,dx,eps2,jac);
+	if (gfdcode == 15) {
+		return 15;
+	}
+
+
 	maxstep = 1000.0; // Needs to be set at a much higher value proportional to l2 norm of dx
 	dt1 = dt2 = 0.0;
 	for(i = 0; i < N;++i) {
@@ -498,10 +509,13 @@ int bfgs_min(double (*funcpt)(double *,int),void(*funcgrad)(double *, int,double
 		fxf = funcpt(xf,N);
 		if (fxf >= DBL_MAX || fxf <= -DBL_MAX) {
 			printf("Program Exiting as the function value exceeds the maximum double value");
-			exit(1);
+			return 15;
 		}
 
-		grad_fd(funcpt,funcgrad,xf,N,dx,eps2,jacf);
+		gfdcode = grad_fd(funcpt,funcgrad,xf,N,dx,eps2,jacf);
+		if (gfdcode == 15) {
+			return 15;
+		}
 		rcode = stopcheck(fxf,N,xc,xf,jacf,dx,fsval,gtol,stol,retval);
 		//hessian_fd(funcpt,xf,N,dx,hess);
 		//bfgs_naive(hess,N,xc,xf,jac,jacf);
@@ -647,10 +661,10 @@ void inithess_l(double *H, int N, int k, double *tsk,double *tyk, double *dx) {
 
 int bfgs_l_min(double (*funcpt)(double *,int),void(*funcgrad)(double *, int,double *),double *xi,int N,int m,double *dx,double fsval,int MAXITER,int *niter,
 		double eps,double gtol,double ftol,double xtol,double *xf)  {
-	int rcode;
+	int rcode,gfdcode;
 	int i,j,siter,retval;
 	int ptr,iter;
-	double dt1,dt2,alpha;
+	double dt1,dt2,alpha,fo;
 	double fx,num,den,stop0,maxstep,fxf,eps2;
 	double *jac,*scheck,*xc,*H,*step,*jacf,*sk,*yk,*tsk,*tyk;
 
@@ -684,7 +698,7 @@ int bfgs_l_min(double (*funcpt)(double *,int),void(*funcgrad)(double *, int,doub
 	eps2 = sqrt(eps);
 
 	alpha = 1.0;
-
+	gfdcode = 0;
 	
 	//set values
 	for(i = 0; i < N;++i) {
@@ -694,10 +708,14 @@ int bfgs_l_min(double (*funcpt)(double *,int),void(*funcgrad)(double *, int,doub
 	fx = funcpt(xi,N);
 	if (fx >= DBL_MAX || fx <= -DBL_MAX) {
 		printf("Program Exiting as the function value exceeds the maximum double value");
-		exit(1);
+		return 15;
 	}
+	fo = fx;
 
-	grad_fd(funcpt,funcgrad,xi,N,dx,eps2,jac);
+	gfdcode = grad_fd(funcpt,funcgrad,xi,N,dx,eps2,jac);
+	if (gfdcode == 15) {
+		return 15;
+	}
 
 	maxstep = 1000.0; // Needs to be set at a much higher value proportional to l2 norm of dx
 	dt1 = dt2 = 0.0;
@@ -776,11 +794,12 @@ int bfgs_l_min(double (*funcpt)(double *,int),void(*funcgrad)(double *, int,doub
 		//retval = lnsrch(funcpt,xc,jac,step,N,dx,maxstep,stol,xf);
 
 		//retval = swolfe(funcpt,xc,jac,step,N,dx,maxstep,stol,xf);
-
+		//printf("%g %g \n",fo,fxf);
 
 		//grad_fd(funcpt,xf,N,dx,jacf);
-		rcode = stopcheck_mt(fxf, N, xc, xf, jac, dx, fsval, gtol, ftol, retval);
-
+		//rcode = stopcheck_mt(fxf, N, xc, xf, jac, dx, fsval, gtol, ftol, retval);
+		rcode = stopcheck2_mt(fxf,N,fo,jac,dx,eps,gtol,ftol,retval);
+		fo = fxf;
 		for (i = 0; i < N;++i) {
 			tsk[i] = xf[i] - xc[i];
 			tyk[i] = jac[i] - jacf[i];

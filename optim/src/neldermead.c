@@ -259,7 +259,7 @@ int nel_min(double (*funcpt)(double *,int),double *xc,int N,double *dx,double fs
 			for (j=0;j<=N;j++) {
 				s += pow((Y[j]-yavg),2.0);
 			}
-			//s = sqrt(s);
+			s = sqrt(s);//Remove this statement if you want convergence in fewer iterations
 			if (fabs(s) < reqmin) {
 				ctl = 1;
 			}

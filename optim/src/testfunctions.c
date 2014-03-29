@@ -99,9 +99,11 @@ void browngrad(double *x,int N,double *g) {
 	t1 = x[0] - 1e06;
 	t2 = x[1] - 2*1e-06;
 	t3 = x[0]*x[1] - 2;
+	//printf("gradient %g %g %g \n",t1,t2,t3);
 
 	g[0] = 2 * t1 + 2 * t3 * x[1];
 	g[1] = 2 * t2 + 2 * t3 * x[0];
+	//printf("gradient %g %g \n",2 * t2,2 * t3 * x[0]);
 }
 
 double powell(double *x,int N) {

@@ -799,6 +799,7 @@ int bfgs_l_min(double (*funcpt)(double *,int),void(*funcgrad)(double *, int,doub
 		//grad_fd(funcpt,xf,N,dx,jacf);
 		//rcode = stopcheck_mt(fxf, N, xc, xf, jac, dx, fsval, gtol, ftol, retval);
 		rcode = stopcheck2_mt(fxf,N,fo,jac,dx,eps,gtol,ftol,retval);
+		//rcode = stopcheck3_mt(xc,xf,fxf,N,fo,jac,dx,eps,gtol,ftol,retval);
 		fo = fxf;
 		for (i = 0; i < N;++i) {
 			tsk[i] = xf[i] - xc[i];

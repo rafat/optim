@@ -25,6 +25,9 @@ int stopcheck_mt(double fx, int N, double *xc, double *xf, double *jac, double *
 
 int stopcheck2_mt(double fx, int N, double fo, double *jac, double *dx, double eps,double stoptol, double functol, int retval);
 
+int stopcheck3_mt(double *xi,double *xf,double fx, int N, double fo, double *jac, double *dx, double eps,
+		double stoptol, double functol, int retval);
+
 int grad_fd(double(*funcpt)(double *, int),void(*funcgrad)(double *, int,double *), double *x, int N, double *dx, double eps2, double *f);
 
 int grad_cd(double(*funcpt)(double *, int),void(*funcgrad)(double *, int,double *), double *x, int N, double *dx,

@@ -165,6 +165,54 @@ int grad_calc(double(*funcpt)(double *, int), double *x, int N, double *dx, doub
 
 }
 
+int stopcheck3_mt(double *xi,double *xf,double fx, int N, double fo, double *jac, double *dx, double eps,
+		double stoptol, double functol, int retval) {
+	int rcode,i;
+	double nrm,nrmnx,relfit,num,den,stop0;
+	double *scheck;
+	rcode = 0;
+
+	scheck = (double*)malloc(sizeof(double)*N);
+
+	if (retval == 3) {
+		rcode = 4;
+		return rcode;
+	}
+	if (retval == 15) {
+		rcode = 15;
+		return rcode;
+	}
+
+	nrm = l2norm(jac, N);
+	nrmnx = nrm / (double) N;
+
+	if (fabs(fo) < eps) {
+		relfit = fabs(fx - fo);
+	}
+	else {
+		relfit = fabs((fx - fo)/fo);
+	}
+
+	if (nrmnx < stoptol) {
+		rcode = 1; // Successful Convergence
+	} else if (relfit < functol) {
+		rcode = 6; // Relative fit less than function tolerance
+	} else {
+		for (i = 0; i < N; ++i) {
+			den = 1.0+fabs(xf[i]);
+			num = fabs(xf[i] - xi[i]);
+			scheck[i] = num / den;
+		}
+		stop0 = array_max_abs(scheck, N);
+		if (stop0 <= stoptol) {
+			rcode = 2;
+		}
+	}
+
+	free(scheck);
+	return rcode;
+}
+
 int stopcheck2_mt(double fx, int N, double fo, double *jac, double *dx, double eps,double stoptol, double functol, int retval) {
 	int rcode;
 	double nrm,nrmnx,relfit;

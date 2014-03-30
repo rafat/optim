@@ -43,6 +43,10 @@ double powell(double *x,int N);
 
 void powellgrad(double *x,int N,double *g);
 
+double beale(double *x,int N);
+
+double froth(double *x,int N);
+
 double humps(double x);
 
 double func1(double *x,int N);

@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include "optimize.h"
+#include "optimc.h"
 #include "testfunctions.h"
 
 void printGradient(void(*funcgrad) (double *,int ,double *),double *xi,int N) {
@@ -36,7 +36,7 @@ int main(void) {
 	double a,b,oup;
 	opt_object optim;
 
-	N = 5;
+	N = 2;
 	a = 0.3;
 	b = 1;
 
@@ -44,9 +44,10 @@ int main(void) {
 	xf = (double*) malloc(sizeof(double) * N);
 
 	for (i = 0; i < N;++i) {
-		xi[i] = 1;
+		xi[i] = 2;
 	}
-	xi[0] = 0;
+	xi[0] = 0.5;
+	//xi[0] = -3;xi[2] = -3;
 	//xi[1] = 1; xi[2] = 0; xi[3] = 1;
 	//xi[9] = -21.4;
 	method = 6;
@@ -60,12 +61,13 @@ int main(void) {
 		//retval = fminunc(myvalue,myvaluegrad,N,xi,j,xf);
 		//printf("%-25d%-20d%-20g \n",j,retval,myvalue(xf,N));
 		//mdisplay(xf,1,N);
-		optimize(optim,myvalue,myvaluegrad,N,xi,j);
+		optimize(optim,froth,NULL,N,xi,j);
 		summary(optim);
 		for (i = 0; i < N;++i) {
-			xi[i] = 1;
+			xi[i] = 2;
 		}
-		xi[0] = -1.2;
+		xi[0] = 0.5;
+		//xi[0] = -3;xi[2] = -3;
 	}
 
 	//retval = fminunc(brown,browngrad,N,xi,method,xf);
@@ -80,6 +82,7 @@ int main(void) {
 
 	free(xi);
 	free(xf);
+	free_opt(optim);
 
 	return 0;
 }

@@ -5,7 +5,7 @@
  *      Author: Rafat Hussain
  */
 
-#include "optimize.h"
+#include "optimc.h"
 
 opt_object opt_init(int N) {
 	opt_object obj = NULL;
@@ -51,6 +51,17 @@ void summary(opt_object obj) {
 	printf(" ] \n");
 	printf("Function Value : %g \n \n",obj->objfunc);
 
+}
+
+void setMaxIter(opt_object obj,int MaxIter) {
+	obj->MaxIter = MaxIter;
+}
+
+void setTOL(opt_object obj,double gtol,double stol,double ftol,double xtol) {
+	obj->gtol = gtol;
+	obj->stol = stol;
+	obj->ftol = ftol;
+	obj->xtol = xtol;
 }
 
 int fminsearch(double (*funcpt)(double *,int),int N,double *xi,double *xf) {
@@ -108,6 +119,24 @@ int fminunc(double (*funcpt)(double *,int),void(*funcgrad)(double *, int,double 
 		 * Method 5 - BFGS
 		 * Method 6 - Limited Memory BFGS
 		 */
+	/*
+	 * Return Codes
+	 *
+	 * Code 1 denotes probable success.
+	 * Codes 2,3 and 6 denote possible success.
+	 * Codes 0, 4 and 15 denote failure. [Code 4 my also occur in cases where the minima is realized but
+	 * convergence is not achieved due to tolerance values being too small. It is recommended that you use
+	 * another method if you suspect that such a scenario has occured.]
+	 *
+	 * 0 - Input Error
+	 * 1 - df(x)/dx <= gtol achieved so current point may be the local minima.
+	 * 2 - Distance between the last two steps is less than stol or |xf - xi| <= stol so the point may be the local minima.
+	 * 3 - Global Step failed to locate a lower point than the current point so it may be the local minima.
+	 * 4 - Iteration Limit exceeded. Convergence probably not achieved.
+	 * 6 - Function value drops below ftol (relative functional tolerance).
+	 * 15 - Overflow occurs. Try a different method.
+	 *
+	 */
 	fsval = 1.0;
 	MAXITER = 200*N;
 	niter = 0;
@@ -190,7 +219,7 @@ double fminbnd(double (*funcpt)(double),double a, double b) {
 
 int fminqn(double (*funcpt)(double *,int),void(*funcgrad)(double *, int,double *),int N,double *xi,
 		double delta,int method,double *dx,double fsval,double *xf) {
-	int retval,i;
+	int retval;
 	int MAXITER,niter;
 	double eps,gtol,stol;
 	/*
@@ -205,6 +234,24 @@ int fminqn(double (*funcpt)(double *,int),void(*funcgrad)(double *, int,double *
 	 * delta = -1.0
 	 * dx = {1.0,1.0,...} - 1XN vector
 
+	 */
+	/*
+	 * Return Codes
+	 *
+	 * Code 1 denotes probable success.
+	 * Codes 2,3 and 6 denote possible success.
+	 * Codes 0, 4 and 15 denote failure. [Code 4 my also occur in cases where the minima is realized but
+	 * convergence is not achieved due to tolerance values being too small. It is recommended that you use
+	 * another method if you suspect that such a scenario has occured.]
+	 *
+	 * 0 - Input Error
+	 * 1 - df(x)/dx <= gtol achieved so current point may be the local minima.
+	 * 2 - Distance between the last two steps is less than stol or |xf - xi| <= stol so the point may be the local minima.
+	 * 3 - Global Step failed to locate a lower point than the current point so it may be the local minima.
+	 * 4 - Iteration Limit exceeded. Convergence probably not achieved.
+	 * 6 - Function value drops below ftol (relative functional tolerance).
+	 * 15 - Overflow occurs. Try a different method.
+	 *
 	 */
 
 	MAXITER = 200*N;
@@ -258,6 +305,24 @@ void optimize(opt_object obj,double (*funcpt)(double *,int),void(*funcgrad)(doub
 		 * Method 5 - BFGS
 		 * Method 6 - Limited Memory BFGS
 		 */
+	/*
+	 * Return Codes
+	 *
+	 * Code 1 denotes probable success.
+	 * Codes 2,3 and 6 denote possible success.
+	 * Codes 0, 4 and 15 denote failure. [Code 4 my also occur in cases where the minima is realized but
+	 * convergence is not achieved due to tolerance values being too small. It is recommended that you use
+	 * another method if you suspect that such a scenario has occurred.]
+	 *
+	 * 0 - Input Error
+	 * 1 - df(x)/dx <= gtol achieved so current point may be the local minima.
+	 * 2 - Distance between the last two steps is less than stol or |xf - xi| <= stol so the point may be the local minima.
+	 * 3 - Global Step failed to locate a lower point than the current point so it may be the local minima.
+	 * 4 - Iteration Limit exceeded. Convergence probably not achieved.
+	 * 6 - Function value drops below ftol (relative functional tolerance).
+	 * 15 - Overflow occurs. Try a different method.
+	 *
+	 */
 	fsval = 1.0;
 	delta = -1.0; // Trust Region default
 
@@ -302,7 +367,7 @@ void optimize(opt_object obj,double (*funcpt)(double *,int),void(*funcgrad)(doub
 		obj->retval = bfgs_min(funcpt,funcgrad,xi,obj->N,dx,fsval,obj->MaxIter,&obj->Iter,obj->eps,obj->gtol,
 				obj->stol,obj->xopt);
 	} else if (method == 6) {
-		strcpy(obj->MethodName,"Newton Line Search");
+		strcpy(obj->MethodName,"Limited Memory BFGS");
 		m = mvalue(N);
 		obj->retval = bfgs_l_min(funcpt,funcgrad,xi,obj->N,m,dx,fsval,obj->MaxIter,&obj->Iter,obj->eps,
 				obj->gtol,obj->ftol,obj->xtol,obj->xopt);
@@ -315,4 +380,10 @@ void optimize(opt_object obj,double (*funcpt)(double *,int),void(*funcgrad)(doub
 	obj->objfunc = funcpt(obj->xopt,obj->N);
 
 	free(dx);
+}
+
+void free_opt(opt_object object) {
+
+	free(object);
+
 }

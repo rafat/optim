@@ -638,8 +638,8 @@ void srecmult(double* A, double* B, double* C,int m,int n, int p,int sA,int sB, 
 }
 
 void smult(double* A, double* B, double* C,int m,int n, int p) {
-	int a,b,c,nrec,i;
-	double *X,*Y,*Z,*P,*A1,*B1;
+	int a,b,c,nrec;
+	double *X,*Y,*Z,*P;
 	a = m;
 	b = n;
 	c = p;
@@ -728,7 +728,7 @@ void ludecomp(double *A,int N,int *ipiv) {
 void linsolve(double *A,int N,double *b,int *ipiv,double *x) {
 	int i,j,c1,l;
 	double *y;
-	double sum,temp;
+	double sum;
 	
 	y = (double*) malloc(sizeof(double) *N);
 	/*
@@ -777,7 +777,7 @@ void linsolve(double *A,int N,double *b,int *ipiv,double *x) {
 	free(y);
 }
 
-void minverse(double *A,int N,double *ipiv,double *inv) {
+void minverse(double *A,int N,int *ipiv,double *inv) {
 	int i,j,stride;
 	double *col,*x;
 	
@@ -1397,7 +1397,7 @@ int francis_iter(double *A, int N, double *H) {
 
 static void eig2t(double *A, int stride) {
 	int N;
-	double a11,a12,a21,a22,c,s,c2,s2,cs,t1,t,t2,at11,at12,at21,at22;
+	double a11,a12,a21,a22,c,s,c2,s2,cs,t1,t,at11,at12,at21,at22;
 	N = stride;
 	
 	a11 = A[0];

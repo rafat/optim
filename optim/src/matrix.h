@@ -88,7 +88,7 @@ void ludecomp(double *A,int N,int *ipiv);
 
 void linsolve(double *A,int N,double *b,int *ipiv,double *x);
 
-void minverse(double *A,int M,double *ipiv,double *inv);
+void minverse(double *A,int M,int *ipiv,double *inv);
 
 void eye(double *mat,int N);
 
